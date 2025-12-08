@@ -63,47 +63,12 @@ public class Knight {
         }
     }
 
-    public void loadAnimation(GL gl, AnimationState state, String folderPath) {
-
-        File folder = new File(folderPath);
-        File[] files = folder.listFiles((d, n) -> n.endsWith(".png"));
-        if (files == null || files.length == 0) {
-            System.out.println("Error loading: " + folderPath);
-            return;
-        }
-
-        Arrays.sort(files);
-
-        int[] ids = new int[files.length];
-        gl.glGenTextures(files.length, ids, 0);
-
-        for (int i = 0; i < files.length; i++) {
-            try {
-                TextureReader.Texture t = TextureReader.readTexture(files[i].getPath(), true);
-                textures.put(ids[i], t);
-
-                gl.glBindTexture(GL.GL_TEXTURE_2D, ids[i]);
-                new GLU().gluBuild2DMipmaps(
-                        GL.GL_TEXTURE_2D, GL.GL_RGBA,
-                        t.getWidth(), t.getHeight(),
-                        GL.GL_RGBA, GL.GL_UNSIGNED_BYTE,
-                        t.getPixels()
-                );
-
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        animationFrames.put(state, ids);
-    }
-
     public void update(){
         long now = System.currentTimeMillis();
 
         if (isDefend && shieldHealth > 0) {
             shieldHealth = Math.max(0, shieldHealth - shieldDrain);
             if (shieldHealth <= 0) {
-
                 stopDefending();
             }
         } else if (!isDefend && shieldHealth < shieldMaxHealth) {
@@ -203,20 +168,6 @@ public class Knight {
         gl.glDisable(GL.GL_BLEND);
     }
 
-    public void attack(Knight target) {
-        long now = System.currentTimeMillis();
-
-        if (now < nxtAttackTime) return;
-        if (isHurting || currState == AnimationState.Dead) return;
-
-        setState(AnimationState.Attack1);
-        nxtAttackTime = now + attackCD;
-
-        if (Collision.hit(this, target)) {
-            target.takeDamage(10, this);
-        }
-    }
-
     public boolean takeDamage(int dmg, Knight attacker) {
         if (currState == AnimationState.Dead) return false;
 
@@ -232,6 +183,7 @@ public class Knight {
 
             if (hp <= 0) {
                 hp = 0;
+                SoundManager.playSSE("death");
                 setState(AnimationState.Dead);
                 isDefend = false;
             }
@@ -240,18 +192,17 @@ public class Knight {
         } else {
 
             if (isHurting) return false;
-
-            Sound.play("src//assets//sounds//hurt.wav");
-
             hp -= dmg;
 
             if (hp <= 0) {
                 hp = 0;
+                SoundManager.playSSE("death");
                 setState(AnimationState.Dead);
                 isDefend = false;
                 return false;
             }
 
+            Sound.play("src//assets//sounds//hurt.wav");
             isHurting = true;
             hurtEndTime = System.currentTimeMillis() + hurtDur;
             setState(AnimationState.Hurt);
@@ -311,21 +262,22 @@ public class Knight {
     }
     public void attack1(Knight target) {
         if (!canAttack()) return;
+
         executeAttack(AnimationState.Attack1, attack1Dmg, target, "Light Attack");
     }
     public void attack2(Knight target) {
         if (!canAttack()) return;
+        SoundManager.playSSE("attack2");
         executeAttack(AnimationState.Attack2, attack2Dmg, target, "Medium Attack");
     }
     public void attack3(Knight target) {
         if (!canAttack()) return;
+        SoundManager.playSSE("attack3");
         executeAttack(AnimationState.Attack3, attack3Dmg, target, "Heavy Attack");
     }
-
     public float getShieldHealth() {
         return shieldHealth;
     }
-
     public float getShieldPercent() {
         return shieldHealth / shieldMaxHealth;
     }
@@ -338,12 +290,10 @@ public class Knight {
             setState(AnimationState.Idle);
         }
     }
-
     public void startDefending() {
         if (isHurting || currState == AnimationState.Dead) return;
         if (isAttackState(currState)) return;
         if (shieldHealth <= 0) return;
-
         isDefend = true;
         setState(AnimationState.Defend);
     }

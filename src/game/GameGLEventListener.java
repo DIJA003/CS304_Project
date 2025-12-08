@@ -50,6 +50,12 @@ public class GameGLEventListener extends AnimListener {
 
         loadAllAnimations(gl, player1, "src//assets//knight1");
         loadAllAnimations(gl, player2, "src//assets//knight2");
+
+        SoundManager.loadSound("attack2","src//assets//sounds//attack2.wav");
+        SoundManager.loadSound("attack3","src//assets//sounds//attack3.wav");
+
+
+        SoundManager.loadSound("death","src//assets//sounds//death.wav");
     }
 
     private void loadAllAnimations(GL gl, Knight k, String basePath) {
@@ -104,9 +110,7 @@ public class GameGLEventListener extends AnimListener {
 
     @Override
     public void display(GLAutoDrawable drawable) {
-//        if(isKeyPressed(KeyEvent.VK_ESCAPE)){
-//            gameMode = null;
-//        }
+
         GL gl = drawable.getGL();
         gl.glClear(GL.GL_COLOR_BUFFER_BIT);
         gl.glLoadIdentity();

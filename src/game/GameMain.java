@@ -39,6 +39,9 @@ public class GameMain extends JFrame {
 
     private void showMainMenu() {
 
+        SoundManager.stopMusic();
+        SoundManager.playMusic("src//assets//sounds//MainMenu.wav");
+
         menuPanel = new BackgroundPanel("src//assets//ui//GameBackGround.png");
         menuPanel.setLayout(new BorderLayout());
         menuPanel.setBackground(new Color(30, 30, 40));
@@ -203,6 +206,11 @@ public class GameMain extends JFrame {
     }
 
     private void startGame(GameMode mode) {
+
+        SoundManager.stopMusic();
+        SoundManager.playMusic("src//assets//sounds//Combat.wav");
+
+
         if (menuPanel != null) {
             remove(menuPanel);
         }
