@@ -392,11 +392,19 @@ public class GameGLEventListener extends AnimListener {
             currLevel = Difficulty.Medium;
             SoundManager.stopMusic();
             SoundManager.playMusic("src//assets//sounds//Combat.wav");
+            player1.hp = 110;
+            player1.attack1Dmg = 11;
+            player1.attack2Dmg = 16;
+            player1.attack3Dmg = 25;
             player2 = new Knight(160, 25, false);
         } else if (currLevel == Difficulty.Medium) {
             currLevel = Difficulty.Hard;
             SoundManager.stopMusic();
             SoundManager.playMusic("src//assets//sounds//SamuraiMusic.wav");
+            player1.hp = 115;
+            player1.attack1Dmg = 13;
+            player1.attack2Dmg = 17;
+            player1.attack3Dmg = 30;
             player2 = new Knight(160, 35, false);
         } else {
             return;

@@ -31,7 +31,7 @@ public class AIController {
             case Easy:
                 attackDelay = 900;
                 moveSpd = 1;
-                ai.hp = 1;
+                ai.hp = 100;
                 ai.attack1Dmg = 8;
                 ai.attack2Dmg = 12;
                 ai.attack3Dmg = 16;
@@ -40,7 +40,7 @@ public class AIController {
             case Medium:
                 attackDelay = 650;
                 moveSpd = 2;
-                ai.hp = 1;
+                ai.hp = 150;
                 ai.attack1Dmg = 12;
                 ai.attack2Dmg = 17;
                 ai.attack3Dmg = 22;
@@ -49,7 +49,7 @@ public class AIController {
             case Hard:
                 attackDelay = 450;
                 moveSpd = 3;
-                ai.hp = 17;
+                ai.hp = 200;
                 ai.attack1Dmg = 15;
                 ai.attack2Dmg = 20;
                 ai.attack3Dmg = 28;
