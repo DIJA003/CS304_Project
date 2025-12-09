@@ -69,7 +69,8 @@ public class GameGLEventListener extends AnimListener {
         SoundManager.loadSound("death", "src//assets//sounds//death.wav");
 
         bg.loadBackGround(gl, "src//assets//environment//backGround.png");
-        vic.load(gl,"src//assets//ui//win.png");
+
+        vic.load(gl,"src//assets//ui//winfinal.png");
     }
 
     private void loadAllAnimations(GL gl, Knight k, String basePath) {
