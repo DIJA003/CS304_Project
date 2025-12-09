@@ -5,6 +5,7 @@ import com.sun.opengl.util.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -172,11 +173,11 @@ public class GameMain extends JFrame {
         panel.add(Box.createRigidArea(new Dimension(0, 20)));
 
         panel.add(createControlSection("PLAYER 2 (Multiplayer)", new String[][]{
-                {"Arrow Left/Right Keys", "Move"},
-                {"J", "Light Attack"},
-                {"K", "Medium Attack"},
-                {"L", "Heavy Attack"},
-                {"I", "Shield / Block"}
+                {"J For Left, L For Right", "Move"},
+                {"U", "Light Attack"},
+                {"I", "Medium Attack"},
+                {"O", "Heavy Attack"},
+                {"K", "Shield / Block"}
         }));
 
         JScrollPane scrollPane = new JScrollPane(panel);
@@ -219,10 +220,10 @@ public class GameMain extends JFrame {
 
         GameGLEventListener listener;
         if (mode == GameMode.SinglePlayer) {
-            listener = new GameGLEventListener(GameMode.SinglePlayer);
+            listener = new GameGLEventListener(GameMode.SinglePlayer, this);
             setTitle("Knight vs AI");
         } else {
-            listener = new GameGLEventListener(GameMode.MultiPlayer);
+            listener = new GameGLEventListener(GameMode.MultiPlayer, this);
             setTitle("Knight vs Knight - Multiplayer");
         }
 
@@ -250,7 +251,7 @@ public class GameMain extends JFrame {
         glcanvas.requestFocus();
     }
 
-    private void returnToMenu() {
+    public void returnToMenu() {
         if (animator != null) {
             animator.stop();
             animator = null;

@@ -18,18 +18,16 @@ public class GameGLEventListener extends AnimListener {
     AIController ai;
 
     GameMode gameMode;
+    GameMain parent;
 
     int maxWidth = 200;
     int maxHeight = 200;
 
     BitSet keyBits = new BitSet(256);
 
-    public GameGLEventListener(GameMode mode) {
+    public GameGLEventListener(GameMode mode, GameMain parent) {
         this.gameMode = mode;
-    }
-
-    public GameGLEventListener() {
-        this.gameMode = GameMode.SinglePlayer;
+        this.parent = parent;
     }
 
     @Override
@@ -110,6 +108,7 @@ public class GameGLEventListener extends AnimListener {
 
     @Override
     public void display(GLAutoDrawable drawable) {
+        backToMenu();
 
         GL gl = drawable.getGL();
         gl.glClear(GL.GL_COLOR_BUFFER_BIT);
@@ -136,8 +135,8 @@ public class GameGLEventListener extends AnimListener {
             player2.draw(gl, maxWidth, maxHeight);
         }
 
-        drawEnhancedBars(gl, player1, maxWidth, maxHeight, true);
-        drawEnhancedBars(gl, player2, maxWidth, maxHeight, false);
+        drawBars(gl, player1, maxWidth, maxHeight, true);
+        drawBars(gl, player2, maxWidth, maxHeight, false);
 
     }
 
@@ -197,38 +196,38 @@ public class GameGLEventListener extends AnimListener {
             return;
         }
 
-        if (isKeyPressed(KeyEvent.VK_I)) {
+        if (isKeyPressed(KeyEvent.VK_K)) {
             player2.startDefending();
             return;
         } else {
             player2.stopDefending();
         }
 
-        if (isKeyPressed(KeyEvent.VK_LEFT) && player2.x > 0 && player2.canMove()) {
+        if (isKeyPressed(KeyEvent.VK_J) && player2.x > 0 && player2.canMove()) {
             player2.x--;
             player2.facingRight = false;
             player2.setState(AnimationState.Run);
             moving = true;
         }
 
-        if (isKeyPressed(KeyEvent.VK_RIGHT) && player2.x < maxWidth - 10 && player2.canMove()) {
+        if (isKeyPressed(KeyEvent.VK_L) && player2.x < maxWidth - 10 && player2.canMove()) {
             player2.x++;
             player2.facingRight = true;
             player2.setState(AnimationState.Run);
             moving = true;
         }
 
-        if (isKeyPressed(KeyEvent.VK_J)) {
+        if (isKeyPressed(KeyEvent.VK_U)) {
             player2.attack1(player1);
             moving = true;
         }
 
-        if (isKeyPressed(KeyEvent.VK_K)) {
+        if (isKeyPressed(KeyEvent.VK_I)) {
             player2.attack2(player1);
             moving = true;
         }
 
-        if (isKeyPressed(KeyEvent.VK_L)) {
+        if (isKeyPressed(KeyEvent.VK_O)) {
             player2.attack3(player1);
             moving = true;
         }
@@ -238,7 +237,11 @@ public class GameGLEventListener extends AnimListener {
             player2.setState(AnimationState.Idle);
         }
     }
-
+    public void backToMenu(){
+        if(isKeyPressed(KeyEvent.VK_ESCAPE)){
+            parent.returnToMenu();
+        }
+    }
     @Override
     public void keyPressed(KeyEvent e) {
         keyBits.set(e.getKeyCode());
@@ -265,7 +268,7 @@ public class GameGLEventListener extends AnimListener {
     public void displayChanged(GLAutoDrawable d, boolean modeChanged, boolean deviceChanged) {
     }
 
-    private void drawEnhancedBars(GL gl, Knight k, int maxWidth, int maxHeight, boolean isPlayer) {
+    private void drawBars(GL gl, Knight k, int maxWidth, int maxHeight, boolean isPlayer) {
         float healthPer = Math.max(0, k.hp) / 100f;
         float shieldPer = k.getShieldPercent();
 
