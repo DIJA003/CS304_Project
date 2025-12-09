@@ -41,8 +41,8 @@ public class GameGLEventListener extends AnimListener {
         gl.glEnable(GL.GL_BLEND);
         gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
 
-        player1 = new Knight(50, 40);
-        player2 = new Knight(150, 40);
+        player1 = new Knight(50, 40, true);
+        player2 = new Knight(150, 40, false);
 
         if (gameMode == GameMode.SinglePlayer) {
             ai = new AIController(player2, player1);
@@ -51,11 +51,11 @@ public class GameGLEventListener extends AnimListener {
         loadAllAnimations(gl, player1, "src//assets//knight1");
         loadAllAnimations(gl, player2, "src//assets//knight2");
 
-        SoundManager.loadSound("attack2","src//assets//sounds//attack2.wav");
-        SoundManager.loadSound("attack3","src//assets//sounds//attack3.wav");
+        SoundManager.loadSound("attack2", "src//assets//sounds//attack2.wav");
+        SoundManager.loadSound("attack3", "src//assets//sounds//attack3.wav");
 
 
-        SoundManager.loadSound("death","src//assets//sounds//death.wav");
+        SoundManager.loadSound("death", "src//assets//sounds//death.wav");
     }
 
     private void loadAllAnimations(GL gl, Knight k, String basePath) {
@@ -128,10 +128,10 @@ public class GameGLEventListener extends AnimListener {
         player1.update();
         player2.update();
 
-        if(player2.isDead()){
+        if (player2.isDead()) {
             player2.draw(gl, maxWidth, maxHeight);
             player1.draw(gl, maxWidth, maxHeight);
-        }else{
+        } else {
             player1.draw(gl, maxWidth, maxHeight);
             player2.draw(gl, maxWidth, maxHeight);
         }

@@ -50,9 +50,10 @@ public class Knight {
 
 
 
-    public Knight(int x, int y) {
+    public Knight(int x, int y, boolean facingRight) {
         this.x = x;
         this.y = y;
+        this.facingRight = facingRight;
     }
 
     public void setState(AnimationState newState) {
@@ -120,7 +121,6 @@ public class Knight {
 
     public void draw(GL gl, int maxWidth, int maxHeight) {
 
-
         int[] frames = animationFrames.get(currState);
         if (frames == null || frames.length == 0) return;
 
@@ -150,8 +150,7 @@ public class Knight {
         }
         gl.glScalef(baseScale * aspect, baseScale, 1);
 
-        if (!facingRight)
-            gl.glScalef(-1, 1, 1);
+        if (!facingRight) gl.glScalef(-1, 1, 1);
 
         gl.glBegin(GL.GL_QUADS);
         gl.glTexCoord2f(0, 0);
