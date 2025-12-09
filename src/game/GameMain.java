@@ -164,9 +164,9 @@ public class GameMain extends JFrame {
 
         panel.add(createControlSection("PLAYER 1", new String[][]{
                 {"A/D", "Move"},
-                {"Q", "Light Attack (10 dmg, 25 range)"},
-                {"W", "Medium Attack (15 dmg, 35 range)"},
-                {"E", "Heavy Attack (20 dmg, 45 range)"},
+                {"Q", "Light Attack (10 dmg)"},
+                {"W", "Medium Attack (15 dmg)"},
+                {"E", "Heavy Attack (20 dmg)"},
                 {"Shift", "Shield / Block"}
         }));
 
@@ -209,7 +209,7 @@ public class GameMain extends JFrame {
     private void startGame(GameMode mode) {
 
         SoundManager.stopMusic();
-        SoundManager.playMusic("src//assets//sounds//Combat.wav");
+        SoundManager.playMusic("src//assets//sounds//SkeletonMusic.wav");
 
 
         if (menuPanel != null) {

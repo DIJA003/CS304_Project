@@ -7,6 +7,7 @@ import java.util.Random;
 public class AIController {
 
     Knight ai, player;
+    Difficulty diff;
     int attackRange = 40, moveSpd = 1;
 
     long lastTry = 0;
@@ -18,84 +19,106 @@ public class AIController {
     boolean shouldDef = false;
     long defDur = 0;
 
-    public AIController(Knight ai, Knight player) {
+    public AIController(Knight ai, Knight player, Difficulty diff) {
         this.ai = ai;
         this.player = player;
+        this.diff = diff;
+        applayDifficulty();
+    }
+
+    private void applayDifficulty(){
+        switch(diff){
+            case Easy:
+                attackDelay = 900;
+                moveSpd = 1;
+                ai.hp = 1;
+                ai.attack1Dmg = 8;
+                ai.attack2Dmg = 12;
+                ai.attack3Dmg = 16;
+                ai.shieldHealth = 80;
+                break;
+            case Medium:
+                attackDelay = 650;
+                moveSpd = 2;
+                ai.hp = 1;
+                ai.attack1Dmg = 12;
+                ai.attack2Dmg = 17;
+                ai.attack3Dmg = 22;
+                ai.shieldHealth = 100;
+                break;
+            case Hard:
+                attackDelay = 450;
+                moveSpd = 3;
+                ai.hp = 17;
+                ai.attack1Dmg = 15;
+                ai.attack2Dmg = 20;
+                ai.attack3Dmg = 28;
+                ai.shieldHealth = 120;
+                break;
+        }
     }
 
     public void update() {
-            long now = System.currentTimeMillis();
+        long now = System.currentTimeMillis();
 
-            if (ai.isHurting || ai.currState == AnimationState.Dead) {
-                ai.stopDefending();
-                return;
-            }
-
-            if (player.currState == AnimationState.Dead) {
-                ai.setState(AnimationState.Idle);
-                ai.stopDefending();
-                return;
-            }
-
-            int diff = player.x - ai.x;
-            int distance = Math.abs(diff);
-
-            handleDefensiveBehavior(now, distance);
-
-            if (ai.isDefending()) {
-                ai.facingRight = diff > 0;
-                return;
-            }
-
-            if (distance <= attackRange) {
-                ai.facingRight = diff > 0;
-
-                if (now - lastTry > attackDelay) {
-                    performAttack();
-                    lastTry = now;
-
-                    attackDelay = 400 + random.nextInt(400);
-                }
-
-                if (ai.currState == AnimationState.Attack1 ||
-                        ai.currState == AnimationState.Attack2 ||
-                        ai.currState == AnimationState.Attack3) {
-                    return;
-                }
-            }
-            else if (distance < attackRange + 20) {
-                if (random.nextInt(100) < 5) {
-                    if (random.nextBoolean() && ai.x > 5) {
-                        ai.x -= moveSpd;
-                    } else if (ai.x < 195) {
-                        ai.x += moveSpd;
-                    }
-                    ai.setState(AnimationState.Run);
-                } else {
-                    ai.setState(AnimationState.Idle);
-                }
-                ai.facingRight = diff > 0;
-            }
-            else {
-                if (diff > 0) {
-                    ai.facingRight = true;
-                    ai.x += moveSpd;
-                    ai.setState(AnimationState.Run);
-                } else if (diff < 0) {
-                    ai.facingRight = false;
-                    ai.x -= moveSpd;
-                    ai.setState(AnimationState.Run);
-                }
-            }
-            if (ai.canMove() &&
-                    ai.currState != AnimationState.Run &&
-                    ai.currState != AnimationState.Attack1 &&
-                    ai.currState != AnimationState.Attack2 &&
-                    ai.currState != AnimationState.Attack3) {
-                ai.setState(AnimationState.Idle);
-            }
+        if (ai.currState == AnimationState.Dead) {
+            ai.stopDefending();
+            return;
+        }
+        if (player.currState == AnimationState.Dead) {
+            ai.stopDefending();
+            ai.setState(AnimationState.Idle);
+            return;
         }
 
+        int diff = player.x - ai.x;
+        int distance = Math.abs(diff);
+        ai.facingRight = (diff > 0);
+
+        handleDefensiveBehavior(now, distance);
+
+        if (ai.isDefending())
+            return;
+
+        if (distance <= attackRange) {
+
+            if (now - lastTry > attackDelay) {
+                performAttack();
+                lastTry = now;
+                attackDelay = 400 + random.nextInt(400);
+                return;
+            }
+            if (ai.isAttackState(ai.currState))
+                return;
+            ai.setState(AnimationState.Idle);
+            return;
+        }
+
+        if (random.nextInt(100) < 5) {
+            if (random.nextBoolean() && ai.x > 5) {
+                ai.x -= moveSpd;
+            } else if (ai.x < 195) {
+                ai.x += moveSpd;
+            }
+            ai.setState(AnimationState.Run);
+            return;
+        }
+
+        if (diff > 0 && ai.x < 195) {
+            ai.x += moveSpd;
+            ai.setState(AnimationState.Run);
+        } else if (diff < 0 && ai.x > 5) {
+            ai.x -= moveSpd;
+            ai.setState(AnimationState.Run);
+        } else {
+            ai.setState(AnimationState.Idle);
+        }
+        if (ai.canMove() &&
+                ai.currState != AnimationState.Run &&
+                !ai.isAttackState(ai.currState)) {
+            ai.setState(AnimationState.Idle);
+        }
+    }
     private void performAttack() {
         int choice = random.nextInt(100);
 
@@ -121,10 +144,7 @@ public class AIController {
     }
 
     private void handleDefensiveBehavior(long now, int distance) {
-        boolean playerIsAttacking = (player.currState == AnimationState.Attack1 ||
-                player.currState == AnimationState.Attack2 ||
-                player.currState == AnimationState.Attack3);
-
+        boolean playerIsAttacking = player.isAttackState(player.currState);
         if (playerIsAttacking && distance < 50 && ai.getShieldHealth() > 20) {
             if (now - lastDef > defCD) {
                 if (random.nextInt(100) < 60) {

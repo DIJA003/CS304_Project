@@ -13,21 +13,29 @@ import java.util.Arrays;
 import java.util.BitSet;
 
 public class GameGLEventListener extends AnimListener {
-    Knight player1;
-    Knight player2;
-    AIController ai;
+    private Knight player1;
+    private Knight player2;
+    private AIController ai;
+    private static Difficulty currLevel = Difficulty.Easy;
+    private VictoryBG vic = new VictoryBG();
+    private boolean gameOver = false;
 
-    GameMode gameMode;
-    GameMain parent;
+    private GameMode gameMode;
+    private GameMain parent;
+    private BackGround bg;
 
-    int maxWidth = 200;
-    int maxHeight = 200;
+    private final int maxWidth = 200;
+    private final int maxHeight = 200;
+
+    private int bgTexId = 0;
+    private TextureReader.Texture bgTex;
 
     BitSet keyBits = new BitSet(256);
 
     public GameGLEventListener(GameMode mode, GameMain parent) {
         this.gameMode = mode;
         this.parent = parent;
+        bg = new BackGround();
     }
 
     @Override
@@ -39,21 +47,29 @@ public class GameGLEventListener extends AnimListener {
         gl.glEnable(GL.GL_BLEND);
         gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
 
-        player1 = new Knight(50, 40, true);
-        player2 = new Knight(150, 40, false);
+        player1 = new Knight(50, 25, true);
+        player2 = new Knight(150, 25, false);
 
         if (gameMode == GameMode.SinglePlayer) {
-            ai = new AIController(player2, player1);
+            currLevel = Difficulty.Easy;
+            ai = new AIController(player2, player1,currLevel);
+            loadAllAnimations(gl, player2, currLevel.path);
+        }
+        else{
+            loadAllAnimations(gl, player2, "src//assets//knight2");
         }
 
         loadAllAnimations(gl, player1, "src//assets//knight1");
-        loadAllAnimations(gl, player2, "src//assets//knight2");
+        //loadAllAnimations(gl, player2, "src//assets//knight2");
 
+        SoundManager.loadSound("attack1", "src//assets//sounds//attack1.wav");
         SoundManager.loadSound("attack2", "src//assets//sounds//attack2.wav");
         SoundManager.loadSound("attack3", "src//assets//sounds//attack3.wav");
-
-
+        SoundManager.loadSound("hurt", "src//assets//sounds//hurt.wav");
         SoundManager.loadSound("death", "src//assets//sounds//death.wav");
+
+        bg.loadBackGround(gl, "src//assets//environment//backGround.png");
+        vic.load(gl,"src//assets//ui//win.png");
     }
 
     private void loadAllAnimations(GL gl, Knight k, String basePath) {
@@ -114,10 +130,24 @@ public class GameGLEventListener extends AnimListener {
         gl.glClear(GL.GL_COLOR_BUFFER_BIT);
         gl.glLoadIdentity();
 
+//        bg.update();
+        bg.drawBackGround(gl);
+
+        if (gameMode == GameMode.SinglePlayer && player2.isDead() && currLevel == Difficulty.Hard) {
+            if (!gameOver) {
+                gameOver = true;
+            }
+            vic.drawVictory(gl,0f, 0.5f, 0.5f);
+        }
+
+
         if (gameMode == GameMode.SinglePlayer) {
             handlePlayer1Input();
             if (ai != null) {
                 ai.update();
+            }
+            if(player2.isDead()){
+                spawnNextBot(gl);
             }
         } else {
             handlePlayer1Input();
@@ -237,6 +267,7 @@ public class GameGLEventListener extends AnimListener {
             player2.setState(AnimationState.Idle);
         }
     }
+
     public void backToMenu(){
         if(isKeyPressed(KeyEvent.VK_ESCAPE)){
             parent.returnToMenu();
@@ -267,6 +298,7 @@ public class GameGLEventListener extends AnimListener {
     @Override
     public void displayChanged(GLAutoDrawable d, boolean modeChanged, boolean deviceChanged) {
     }
+
 
     private void drawBars(GL gl, Knight k, int maxWidth, int maxHeight, boolean isPlayer) {
         float healthPer = Math.max(0, k.hp) / 100f;
@@ -351,4 +383,26 @@ public class GameGLEventListener extends AnimListener {
     }
 
 
+    public static Difficulty getDiff(){
+        return currLevel;
+    }
+    private void spawnNextBot(GL gl) {
+        if (currLevel == Difficulty.Easy) {
+            currLevel = Difficulty.Medium;
+            SoundManager.stopMusic();
+            SoundManager.playMusic("src//assets//sounds//Combat.wav");
+            player2 = new Knight(160, 25, false);
+        } else if (currLevel == Difficulty.Medium) {
+            currLevel = Difficulty.Hard;
+            SoundManager.stopMusic();
+            SoundManager.playMusic("src//assets//sounds//SamuraiMusic.wav");
+            player2 = new Knight(160, 35, false);
+        } else {
+            return;
+        }
+
+        loadAllAnimations(gl, player2, currLevel.path);
+
+        ai = new AIController(player2, player1, currLevel);
+    }
 }

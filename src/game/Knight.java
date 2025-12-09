@@ -47,7 +47,10 @@ public class Knight {
     private final float shieldRegen = 0.5f;
     private final float shieldDrain = 0.3f;
     private final float shieldDmgRed = 0.9f;
+    private boolean isShieldBroken = false;
+    private final float shieldUpPoint = 25f;
 
+    private Difficulty currLevel = GameGLEventListener.getDiff();
 
 
     public Knight(int x, int y, boolean facingRight) {
@@ -70,10 +73,15 @@ public class Knight {
         if (isDefend && shieldHealth > 0) {
             shieldHealth = Math.max(0, shieldHealth - shieldDrain);
             if (shieldHealth <= 0) {
+                shieldHealth = 0;
+                isShieldBroken = true;
                 stopDefending();
             }
         } else if (!isDefend && shieldHealth < shieldMaxHealth) {
             shieldHealth = Math.min(shieldMaxHealth, shieldHealth + shieldRegen);
+            if (isShieldBroken && shieldHealth >= shieldUpPoint) {
+                isShieldBroken = false;
+            }
         }
 
         if (isHurting) {
@@ -141,12 +149,20 @@ public class Knight {
         gl.glPushMatrix();
         gl.glTranslatef(nx, ny, 0);
 
+        float baseScale;
 
-
-        float baseScale = 0.15f;
-
-        if(currState == AnimationState.Dead){
-            baseScale = 0.1f;
+        if (currState == AnimationState.Dead) {
+            if (currLevel == Difficulty.Hard) {
+                baseScale = 0.08f;
+            } else {
+                baseScale = 0.12f;
+            }
+        } else {
+            if (currLevel == Difficulty.Hard) {
+                baseScale = 0.30f;
+            } else {
+                baseScale = 0.22f;
+            }
         }
         gl.glScalef(baseScale * aspect, baseScale, 1);
 
@@ -173,19 +189,22 @@ public class Knight {
         boolean isFacingAttacker = (attacker.x < x && !facingRight) || (attacker.x > x && facingRight);
 
         if (isDefend && isFacingAttacker && shieldHealth > 0) {
-            float actualDamage = dmg * shieldDmgRed;
+//            float actualDamage = dmg * shieldDmgRed;
             //hp -= (int) actualDamage;
-
             shieldHealth = Math.max(0, shieldHealth - (dmg * 2));
-
-            System.out.println("blocked");
-
-            if (hp <= 0) {
-                hp = 0;
-                SoundManager.playSSE("death");
-                setState(AnimationState.Dead);
-                isDefend = false;
+            if(shieldHealth <= 0){
+                shieldHealth = 0;
+                isShieldBroken = true;
+                stopDefending();
             }
+//            System.out.println("blocked");
+
+//            if (hp <= 0) {
+//                hp = 0;
+//                SoundManager.playSSE("death");
+//                setState(AnimationState.Dead);
+//                isDefend = false;
+//            }
 
             return true;
         } else {
@@ -200,8 +219,7 @@ public class Knight {
                 isDefend = false;
                 return false;
             }
-
-            Sound.play("src//assets//sounds//hurt.wav");
+            SoundManager.playSSE("hurt");
             isHurting = true;
             hurtEndTime = System.currentTimeMillis() + hurtDur;
             setState(AnimationState.Hurt);
@@ -236,7 +254,6 @@ public class Knight {
 
     private boolean canAttack() {
         long now = System.currentTimeMillis();
-
         if (now < nxtAttackTime) return false;
         if (isHurting || currState == AnimationState.Dead) return false;
         if (isDefend) return false;
@@ -261,7 +278,7 @@ public class Knight {
     }
     public void attack1(Knight target) {
         if (!canAttack()) return;
-
+        SoundManager.playSSE("attack1");
         executeAttack(AnimationState.Attack1, attack1Dmg, target, "Light Attack");
     }
     public void attack2(Knight target) {
@@ -290,9 +307,9 @@ public class Knight {
         }
     }
     public void startDefending() {
+        if(isShieldBroken || shieldHealth <= 0) return;
         if (isHurting || currState == AnimationState.Dead) return;
         if (isAttackState(currState)) return;
-        if (shieldHealth <= 0) return;
         isDefend = true;
         setState(AnimationState.Defend);
     }
