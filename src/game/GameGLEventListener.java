@@ -128,8 +128,13 @@ public class GameGLEventListener extends AnimListener {
         player1.update();
         player2.update();
 
-        player1.draw(gl, maxWidth, maxHeight);
-        player2.draw(gl, maxWidth, maxHeight);
+        if(player2.isDead()){
+            player2.draw(gl, maxWidth, maxHeight);
+            player1.draw(gl, maxWidth, maxHeight);
+        }else{
+            player1.draw(gl, maxWidth, maxHeight);
+            player2.draw(gl, maxWidth, maxHeight);
+        }
 
         drawEnhancedBars(gl, player1, maxWidth, maxHeight, true);
         drawEnhancedBars(gl, player2, maxWidth, maxHeight, false);
