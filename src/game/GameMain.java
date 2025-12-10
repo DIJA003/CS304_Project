@@ -223,8 +223,7 @@ public class GameMain extends JFrame {
 
     private void startGame(GameMode mode) {
 
-        SoundManager.stopMusic();
-        SoundManager.playMusic("src//assets//sounds//SkeletonMusic.wav");
+
 
 
 
@@ -238,12 +237,16 @@ public class GameMain extends JFrame {
         if (mode == GameMode.SinglePlayer) {
             String playerName = JOptionPane.showInputDialog(this, "Enter your name:");
             if (playerName == null || playerName.isEmpty()) playerName = "Player";
+            SoundManager.stopMusic();
+            SoundManager.playMusic("src//assets//sounds//SkeletonMusic.wav");
             listener = new GameGLEventListener(GameMode.SinglePlayer, this, playerName);
         } else {
             String p1 = JOptionPane.showInputDialog(this, "Enter Player 1 name:");
             if (p1 == null || p1.isEmpty()) p1 = "Player 1";
             String p2 = JOptionPane.showInputDialog(this, "Enter Player 2 name:");
             if (p2 == null || p2.isEmpty()) p2 = "Player 2";
+            SoundManager.stopMusic();
+            SoundManager.playMusic("src//assets//sounds//Round1.wav");
             listener = new GameGLEventListener(GameMode.MultiPlayer, this, p1, p2);
         }
 

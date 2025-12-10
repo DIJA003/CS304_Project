@@ -41,6 +41,9 @@ public class GameGLEventListener extends AnimListener {
     private final long roundTransitionDelay = 3000;
     private String roundWinnerText = "";
 
+    String[] roundSong = new String[]{"src//assets//sounds//Round2.wav","src//assets//sounds//Round3.wav"};
+    int k = 0;
+
 
     String player1Name = "Player 1",player2Name = "Player 2";
 
@@ -93,6 +96,8 @@ public class GameGLEventListener extends AnimListener {
         SoundManager.loadSound("hurt", "src//assets//sounds//hurt.wav");
         SoundManager.loadSound("death", "src//assets//sounds//death.wav");
         SoundManager.loadSound("protected", "src//assets//sounds//shieldProtect.wav");
+
+        //SoundManager.loadSound("round1", "src//assets//sounds//Round1.wav");
 
         bg.loadBackGround(gl, "src//assets//environment//backGround.png");
 
@@ -218,6 +223,7 @@ public class GameGLEventListener extends AnimListener {
                 }
             } else if (roundOver && !GameStats.isMatchOver()) {
                 long now = System.currentTimeMillis();
+                int i = 1;
                 if (now - roundEndTime > roundTransitionDelay) {
                     startNextRound(gl);
                 }
@@ -493,6 +499,10 @@ public class GameGLEventListener extends AnimListener {
         }
     }
     private void startNextRound(GL gl) {
+        if(k > roundSong.length) k = k % roundSong.length;
+        SoundManager.stopMusic();
+        SoundManager.playMusic(roundSong[k++]);
+
         roundOver = false;
 
         player1.hp = 100;
