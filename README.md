@@ -1,5 +1,7 @@
 2D fight based Game
+
 contents used: 
+  
   Textures are dervative of what we used in labs where i need mutli diff texture for the movements to i had to come up with Map of state and arr of tex...etc
   collision boxes detectors to calculate the hitboxes for the fight, 
   AI controller to enhance singlePlayer exp with 3 level structure(east//passiv - medium//balanced - hard//aggerssive) and pattern recogention
