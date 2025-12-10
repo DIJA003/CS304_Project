@@ -17,7 +17,7 @@ public class Knight {
 
     // stamina
     public float stamina = 100f;
-    public float maxStamina = 150f;
+    public float maxStamina = 100f;
 
     // stamina tune
     private final float staminaRegen = 8f;
@@ -104,23 +104,23 @@ public class Knight {
                 isShieldBroken = false;
             }
         }
-        boolean usedStaminaThisFrame = false;
-        if (isRunning && !isExhausted) {
-            float drain = runDrainPerSec * dt;
-            if (drain > 0) {
-                usedStaminaThisFrame = true;
-                consumeStaminaInternal(drain);
-            }
-        }
-        if (isDefend && !isExhausted) {
-            float drain = defendDrainPerSec * dt;
-            if (drain > 0) {
-                usedStaminaThisFrame = true;
-                consumeStaminaInternal(drain);
-            }
-        }
-
-        if (usedStaminaThisFrame) lastStaminaUseTime = now;
+//        boolean usedStaminaThisFrame = false;
+//        if (isRunning && !isExhausted) {
+//            float drain = runDrainPerSec * dt;
+//            if (drain > 0) {
+//                usedStaminaThisFrame = true;
+//                consumeStaminaInternal(drain);
+//            }
+//        }
+//        if (isDefend && !isExhausted) {
+//            float drain = defendDrainPerSec * dt;
+//            if (drain > 0) {
+//                usedStaminaThisFrame = true;
+//                consumeStaminaInternal(drain);
+//            }
+//        }
+//
+//        if (usedStaminaThisFrame) lastStaminaUseTime = now;
 
         if (!isRunning && !isDefend) {
             if (now - lastStaminaUseTime >= staminaRegenDelay) {
@@ -134,7 +134,7 @@ public class Knight {
             stamina = 0f;
             isExhausted = true;
             if (isDefend) stopDefending();
-            if (isRunning) stopRunning();
+//            if (isRunning) stopRunning();
         } else if (isExhausted && stamina >= exhaustionRecoverThreshold) {
             isExhausted = false;
         }
@@ -346,10 +346,10 @@ public class Knight {
         executeAttack(AnimationState.Attack3, attack3Dmg, target, "Heavy Attack");
     }
 
-    public void startRunning() {
-        if (isExhausted) return;
-        isRunning = true;
-    }
+//    public void startRunning() {
+//        if (isExhausted) return;
+//        isRunning = true;
+//    }
     public void stopRunning() {
         isRunning = false;
     }
@@ -366,8 +366,8 @@ public class Knight {
         stamina = Math.max(0f, stamina - amount);
         if (stamina == 0f) {
             isExhausted = true;
-            if (isDefend) stopDefending();
-            if (isRunning) stopRunning();
+//            if (isDefend) stopDefending();
+//            if (isRunning) stopRunning();
         }
     }
 

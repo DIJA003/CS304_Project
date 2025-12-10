@@ -18,6 +18,7 @@ public class GameGLEventListener extends AnimListener {
     private AIController ai;
     private static Difficulty currLevel = Difficulty.Easy;
     private VictoryBG vic = new VictoryBG();
+    private BarsMang bar;
     private boolean gameOver = false;
 
     private GameMode gameMode;
@@ -29,6 +30,9 @@ public class GameGLEventListener extends AnimListener {
 
     private int bgTexId = 0;
     private TextureReader.Texture bgTex;
+
+    private int barTexId = 0;
+    private TextureReader.Texture barTex;
 
     private boolean roundOver = false;
     private long roundEndTime = 0;
@@ -75,9 +79,33 @@ public class GameGLEventListener extends AnimListener {
 
         bg.loadBackGround(gl, "src//assets//environment//backGround.png");
 
+        loadBarTexture(gl, "src//assets//ui//PlayerBars.png");
+
         vic.load(gl,"src//assets//ui//winfinal.png");
     }
 
+    private void loadBarTexture(GL gl, String path) {
+        try {
+            barTex = TextureReader.readTexture(path, true);
+
+            int[] tex = new int[1];
+            gl.glGenTextures(1, tex, 0);
+            barTexId = tex[0];
+
+            gl.glBindTexture(GL.GL_TEXTURE_2D, barTexId);
+            new GLU().gluBuild2DMipmaps(
+                    GL.GL_TEXTURE_2D,
+                    GL.GL_RGBA,
+                    barTex.getWidth(), barTex.getHeight(),
+                    GL.GL_RGBA,
+                    GL.GL_UNSIGNED_BYTE,
+                    barTex.getPixels()
+            );
+        } catch (IOException e) {
+            System.out.println("Warning: Could not load health bar texture: " + path);
+            e.printStackTrace();
+        }
+    }
     private void loadAllAnimations(GL gl, Knight k, String basePath) {
         loadAnimation(gl, k, AnimationState.Idle, basePath + "//idle");
         loadAnimation(gl, k, AnimationState.Run, basePath + "//run");
@@ -184,13 +212,16 @@ public class GameGLEventListener extends AnimListener {
         if (player2.isDead()) {
             player2.draw(gl, maxWidth, maxHeight);
             player1.draw(gl, maxWidth, maxHeight);
+
         } else {
             player1.draw(gl, maxWidth, maxHeight);
             player2.draw(gl, maxWidth, maxHeight);
         }
 
-//        drawBars(gl, player1, maxWidth, maxHeight, true);
-//        drawBars(gl, player2, maxWidth, maxHeight, false);
+        drawBars(gl, player1, maxWidth, maxHeight, true);
+        if(gameMode == GameMode.MultiPlayer){
+            drawBars(gl, player2, maxWidth, maxHeight, false);
+        }
 
     }
 
@@ -323,90 +354,69 @@ public class GameGLEventListener extends AnimListener {
     public void displayChanged(GLAutoDrawable d, boolean modeChanged, boolean deviceChanged) {
     }
 
+    private void drawBars(GL gl, Knight k, int maxWidth, int maxHeight, boolean isPlayer) {
+        float healthPer = Math.max(0, k.hp) / 100f;
+        float staminaPer = k.getStaminaPercent();
+        float shieldPer = k.getShieldPercent();
 
-//    private void drawBars(GL gl, Knight k, int maxWidth, int maxHeight, boolean isPlayer) {
-//        float healthPer = Math.max(0, k.hp) / 100f;
-//        float shieldPer = k.getShieldPercent();
-//
-//        float xPos = isPlayer ? -0.95f : 0.55f;
-//        float yPos = 0.9f;
-//        float barWidth = 0.35f;
-//        float barHeight = 0.04f;
-//
-//        gl.glDisable(GL.GL_TEXTURE_2D);
-//
-//        String label = isPlayer ? "P1" : (gameMode == GameMode.SinglePlayer ? "AI" : "P2");
-//
-//        gl.glColor3f(0.2f, 0.2f, 0.2f);
-//        gl.glBegin(GL.GL_QUADS);
-//        gl.glVertex2f(xPos, yPos - barHeight);
-//        gl.glVertex2f(xPos + barWidth, yPos - barHeight);
-//        gl.glVertex2f(xPos + barWidth, yPos);
-//        gl.glVertex2f(xPos, yPos);
-//        gl.glEnd();
-//
-//        if (healthPer > 0.6f) {
-//            gl.glColor3f(0, 1, 0);
-//        } else if (healthPer > 0.3f) {
-//            gl.glColor3f(1, 1, 0);
-//        } else {
-//            gl.glColor3f(1, 0, 0);
-//        }
-//
-//        gl.glBegin(GL.GL_QUADS);
-//        gl.glVertex2f(xPos, yPos - barHeight);
-//        gl.glVertex2f(xPos + barWidth * healthPer, yPos - barHeight);
-//        gl.glVertex2f(xPos + barWidth * healthPer, yPos);
-//        gl.glVertex2f(xPos, yPos);
-//        gl.glEnd();
-//
-//        gl.glColor3f(1, 1, 1);
-//        gl.glLineWidth(2.0f);
-//        gl.glBegin(GL.GL_LINE_LOOP);
-//        gl.glVertex2f(xPos, yPos - barHeight);
-//        gl.glVertex2f(xPos + barWidth, yPos - barHeight);
-//        gl.glVertex2f(xPos + barWidth, yPos);
-//        gl.glVertex2f(xPos, yPos);
-//        gl.glEnd();
-//
-//        float shieldYPos = yPos - barHeight - 0.05f;
-//
-//        gl.glColor3f(0.1f, 0.1f, 0.2f);
-//        gl.glBegin(GL.GL_QUADS);
-//        gl.glVertex2f(xPos, shieldYPos - barHeight * 0.7f);
-//        gl.glVertex2f(xPos + barWidth, shieldYPos - barHeight * 0.7f);
-//        gl.glVertex2f(xPos + barWidth, shieldYPos);
-//        gl.glVertex2f(xPos, shieldYPos);
-//        gl.glEnd();
-//
-//        if (k.isDefending()) {
-//            float pulse = 0.5f + 0.5f * (float) Math.sin(System.currentTimeMillis() * 0.01);
-//            gl.glColor3f(0, 0.5f + pulse * 0.5f, 1);
-//        } else {
-//            gl.glColor3f(0, 0.5f, 1);
-//        }
-//
-//        gl.glBegin(GL.GL_QUADS);
-//        gl.glVertex2f(xPos, shieldYPos - barHeight * 0.7f);
-//        gl.glVertex2f(xPos + barWidth * shieldPer, shieldYPos - barHeight * 0.7f);
-//        gl.glVertex2f(xPos + barWidth * shieldPer, shieldYPos);
-//        gl.glVertex2f(xPos, shieldYPos);
-//        gl.glEnd();
-//
-//        gl.glColor3f(0.5f, 0.7f, 1);
-//        gl.glLineWidth(1.5f);
-//        gl.glBegin(GL.GL_LINE_LOOP);
-//        gl.glVertex2f(xPos, shieldYPos - barHeight * 0.7f);
-//        gl.glVertex2f(xPos + barWidth, shieldYPos - barHeight * 0.7f);
-//        gl.glVertex2f(xPos + barWidth, shieldYPos);
-//        gl.glVertex2f(xPos, shieldYPos);
-//        gl.glEnd();
-//        gl.glLineWidth(1.0f);
-//
-//        gl.glEnable(GL.GL_TEXTURE_2D);
-//    }
+        float xPos = isPlayer ? -0.95f : 0.55f;
+        float yPos = 0.88f;
+
+        float imgWidth = 0.4f;
+        float imgHeight = 0.12f;
+
+        gl.glPushAttrib(GL.GL_ENABLE_BIT | GL.GL_TEXTURE_BIT | GL.GL_COLOR_BUFFER_BIT);
+        if (barTexId != 0 && barTex != null) {
+            gl.glEnable(GL.GL_TEXTURE_2D);
+            gl.glEnable(GL.GL_BLEND);
+            gl.glBindTexture(GL.GL_TEXTURE_2D, barTexId);
+            gl.glColor4f(1f, 1f, 1f, 1f);
+
+            gl.glBegin(GL.GL_QUADS);
+            gl.glTexCoord2f(0, 0);
+            gl.glVertex2f(xPos, yPos - imgHeight);
+            gl.glTexCoord2f(1, 0);
+            gl.glVertex2f(xPos + imgWidth, yPos - imgHeight);
+            gl.glTexCoord2f(1, 1);
+            gl.glVertex2f(xPos + imgWidth, yPos);
+            gl.glTexCoord2f(0, 1);
+            gl.glVertex2f(xPos, yPos);
+            gl.glEnd();
+        }
+
+        gl.glDisable(GL.GL_TEXTURE_2D);
+        gl.glEnable(GL.GL_BLEND);
+
+        float barStartX = xPos + 0.155f;
+        float barWidth = 0.219f;
+        float barHeight = 0.015f;
+
+        float greenBarY = yPos - 0.012f;
+        float redBarY   = yPos - 0.055f;
+        float blueBarY  = yPos - 0.092f;
 
 
+        drawColoredBar(gl, barStartX, greenBarY, barWidth, barHeight, staminaPer,
+                0f, 0.9f, 0.1f);
+
+        drawColoredBar(gl, xPos + 0.060f, redBarY, 0.34f, 0.015f, healthPer,
+                0.9f, 0f, 0f);
+
+        drawColoredBar(gl, barStartX, blueBarY, barWidth, barHeight, shieldPer,
+                0.1f, 0.3f, 0.9f);
+        gl.glPopAttrib();
+    }
+
+    private void drawColoredBar(GL gl, float x, float y, float width, float height,
+                                float percentage, float r, float g, float b) {
+        gl.glColor4f(r, g, b, 0.9f);
+        gl.glBegin(GL.GL_QUADS);
+        gl.glVertex2f(x, y - height);
+        gl.glVertex2f(x + width * percentage, y - height);
+        gl.glVertex2f(x + width * percentage, y);
+        gl.glVertex2f(x, y);
+        gl.glEnd();
+    }
     public static Difficulty getDiff(){
         return currLevel;
     }
