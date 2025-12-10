@@ -40,22 +40,22 @@ public class AIController {
     private void applayDifficulty(){
         switch(diff){
             case Easy:
-                attackDelay = 900;
+                attackDelay = 1000;
                 moveSpd = 1;
-                ai.hp = 100;
+                ai.hp = 90;
                 ai.attack1Dmg = 8;
                 ai.attack2Dmg = 12;
                 ai.attack3Dmg = 16;
-                ai.shieldHealth = 80;
+                ai.shieldHealth = 60;
                 break;
             case Medium:
-                attackDelay = 650;
+                attackDelay = 700;
                 moveSpd = 2;
-                ai.hp = 150;
+                ai.hp = 100;
                 ai.attack1Dmg = 12;
                 ai.attack2Dmg = 17;
                 ai.attack3Dmg = 22;
-                ai.shieldHealth = 100;
+                ai.shieldHealth = 80;
                 break;
             case Hard:
                 attackDelay = 450;
@@ -64,7 +64,7 @@ public class AIController {
                 ai.attack1Dmg = 15;
                 ai.attack2Dmg = 20;
                 ai.attack3Dmg = 28;
-                ai.shieldHealth = 120;
+                ai.shieldHealth = 110;
                 break;
         }
     }

@@ -1,11 +1,13 @@
 package game;
 
+import com.sun.opengl.util.GLUT;
 import textures.AnimListener;
 import textures.Texture.TextureReader;
 
 import javax.media.opengl.GL;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.glu.GLU;
+import javax.swing.*;
 import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.IOException;
@@ -39,11 +41,24 @@ public class GameGLEventListener extends AnimListener {
     private final long roundTransitionDelay = 3000;
     private String roundWinnerText = "";
 
+
+    String player1Name = "Player 1",player2Name = "Player 2";
+
     BitSet keyBits = new BitSet(256);
 
-    public GameGLEventListener(GameMode mode, GameMain parent) {
+    public GameGLEventListener(GameMode mode, GameMain parent, String player1Name) {
         this.gameMode = mode;
         this.parent = parent;
+        this.player1Name = player1Name;
+        this.player2Name = "AI";
+        bg = new BackGround();
+    }
+
+    public GameGLEventListener(GameMode mode, GameMain parent, String player1Name, String player2Name) {
+        this.gameMode = mode;
+        this.parent = parent;
+        this.player1Name = player1Name;
+        this.player2Name = player2Name;
         bg = new BackGround();
     }
 
@@ -60,6 +75,7 @@ public class GameGLEventListener extends AnimListener {
         player2 = new Knight(150, 25, false);
 
         if (gameMode == GameMode.SinglePlayer) {
+            GameStats.startSinglePLayer();
             currLevel = Difficulty.Easy;
             ai = new AIController(player2, player1,currLevel);
             loadAllAnimations(gl, player2, currLevel.path);
@@ -76,6 +92,7 @@ public class GameGLEventListener extends AnimListener {
         SoundManager.loadSound("attack3", "src//assets//sounds//attack3.wav");
         SoundManager.loadSound("hurt", "src//assets//sounds//hurt.wav");
         SoundManager.loadSound("death", "src//assets//sounds//death.wav");
+        SoundManager.loadSound("protected", "src//assets//sounds//shieldProtect.wav");
 
         bg.loadBackGround(gl, "src//assets//environment//backGround.png");
 
@@ -172,6 +189,10 @@ public class GameGLEventListener extends AnimListener {
                 if (!gameOver) {
                     gameOver = true;
                     GameStats.endSinglePlayer();
+                    long timeTaken = GameStats.getTime();
+                    if (player1Name != null && !player1Name.isEmpty()) {
+                        Leaderboard.addRecord(player1Name, timeTaken);
+                    }
                 }
                 vic.drawVictory(gl, 0f, 0.5f, 0.5f);
                 //drawFinalStats(gl);
@@ -404,9 +425,18 @@ public class GameGLEventListener extends AnimListener {
 
         drawColoredBar(gl, barStartX, blueBarY, barWidth, barHeight, shieldPer,
                 0.1f, 0.3f, 0.9f);
+
+        drawText(gl, isPlayer ? player1Name : player2Name, xPos + 0.2f, yPos - 0.2f);
         gl.glPopAttrib();
     }
-
+    private void drawText(GL gl, String text, float x, float y) {
+        GLUT glut = new GLUT();
+        gl.glColor3f(1f, 1f, 1f);
+        gl.glRasterPos2f(x, y);
+        for (char c : text.toCharArray()) {
+            glut.glutBitmapCharacter(GLUT.BITMAP_HELVETICA_18, c);
+        }
+    }
     private void drawColoredBar(GL gl, float x, float y, float width, float height,
                                 float percentage, float r, float g, float b) {
         gl.glColor4f(r, g, b, 0.9f);

@@ -244,6 +244,7 @@ public class Knight {
 
         if (isDefend && isFacingAttacker && shieldHealth > 0) {
             shieldHealth = Math.max(0, shieldHealth - (dmg * 2));
+
             if(shieldHealth <= 0){
                 shieldHealth = 0;
                 isShieldBroken = true;
@@ -312,9 +313,7 @@ public class Knight {
         if (Collision.hit(this, target)) {
             boolean blocked = target.takeDamage(damage, this);
             if (blocked) {
-                System.out.println(attackName + " BLOCKED!");
-            } else {
-                System.out.println(attackName + " hit damage: " + damage);
+                SoundManager.playSSE("protected");
             }
         }
     }

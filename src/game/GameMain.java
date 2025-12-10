@@ -2,6 +2,7 @@ package game;
 
 import com.sun.opengl.util.*;
 
+
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -13,6 +14,10 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 import javax.media.opengl.*;
 import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableModel;
+import java.util.*;
+import java.util.List;
 
 public class GameMain extends JFrame {
 
@@ -101,6 +106,13 @@ public class GameMain extends JFrame {
         );
         exitBtn.addActionListener(e -> System.exit(0));
 
+        JButton leaderboardBtn = createMenuButton(
+                "LEADERBOARD",
+                "View top single-player times",
+                new Color(100, 200, 100)
+        );
+        leaderboardBtn.addActionListener(e -> showLeaderboard());
+
         gbc.gridy = 0;
         buttonsPanel.add(singlePlayerBtn, gbc);
         gbc.gridy = 1;
@@ -108,7 +120,10 @@ public class GameMain extends JFrame {
         gbc.gridy = 2;
         buttonsPanel.add(controlsBtn, gbc);
         gbc.gridy = 3;
+        buttonsPanel.add(leaderboardBtn, gbc);
+        gbc.gridy = 4;
         buttonsPanel.add(exitBtn, gbc);
+
 
         titlePanel.setOpaque(false);
         buttonsPanel.setOpaque(false);
@@ -212,6 +227,7 @@ public class GameMain extends JFrame {
         SoundManager.playMusic("src//assets//sounds//SkeletonMusic.wav");
 
 
+
         if (menuPanel != null) {
             remove(menuPanel);
         }
@@ -220,11 +236,15 @@ public class GameMain extends JFrame {
 
         GameGLEventListener listener;
         if (mode == GameMode.SinglePlayer) {
-            listener = new GameGLEventListener(GameMode.SinglePlayer, this);
-            setTitle("Knight vs AI");
+            String playerName = JOptionPane.showInputDialog(this, "Enter your name:");
+            if (playerName == null || playerName.isEmpty()) playerName = "Player";
+            listener = new GameGLEventListener(GameMode.SinglePlayer, this, playerName);
         } else {
-            listener = new GameGLEventListener(GameMode.MultiPlayer, this);
-            setTitle("Knight vs Knight - Multiplayer");
+            String p1 = JOptionPane.showInputDialog(this, "Enter Player 1 name:");
+            if (p1 == null || p1.isEmpty()) p1 = "Player 1";
+            String p2 = JOptionPane.showInputDialog(this, "Enter Player 2 name:");
+            if (p2 == null || p2.isEmpty()) p2 = "Player 2";
+            listener = new GameGLEventListener(GameMode.MultiPlayer, this, p1, p2);
         }
 
         glcanvas = new GLCanvas();
@@ -287,5 +307,33 @@ public class GameMain extends JFrame {
                 g.drawImage(background, 0, 0, getWidth(), getHeight(), this);
             }
         }
+    }
+
+    private void showLeaderboard() {
+        List<Leaderboard.Record> recordList = Leaderboard.getRecords();
+        String[] columnNames = {"Rank", "Player Name", "Time"};
+        Object[][] data = new Object[recordList.size()][3];
+        for (int i = 0; i < recordList.size(); i++) {
+            Leaderboard.Record e = recordList.get(i);
+            data[i][0] = i + 1;
+            data[i][1] = e.playerName;
+            data[i][2] = e.getTime();
+        }
+        DefaultTableModel model = new DefaultTableModel(data, columnNames) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        JTable table = new JTable(model);
+        table.setRowHeight(25);
+        table.getTableHeader().setFont(new Font("SansSerif", Font.BOLD, 12));
+        table.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+        centerRenderer.setHorizontalAlignment(JLabel.CENTER);
+        table.getColumnModel().getColumn(0).setCellRenderer(centerRenderer);
+        JScrollPane scrollPane = new JScrollPane(table);
+        scrollPane.setPreferredSize(new Dimension(400, 250));
+        JOptionPane.showMessageDialog(this, scrollPane, "Top Single Player Times", JOptionPane.PLAIN_MESSAGE);
     }
 }
