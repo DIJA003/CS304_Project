@@ -30,6 +30,11 @@ public class GameGLEventListener extends AnimListener {
     private int bgTexId = 0;
     private TextureReader.Texture bgTex;
 
+    private boolean roundOver = false;
+    private long roundEndTime = 0;
+    private final long roundTransitionDelay = 3000;
+    private String roundWinnerText = "";
+
     BitSet keyBits = new BitSet(256);
 
     public GameGLEventListener(GameMode mode, GameMain parent) {
@@ -134,25 +139,43 @@ public class GameGLEventListener extends AnimListener {
 //        bg.update();
         bg.drawBackGround(gl);
 
-        if (gameMode == GameMode.SinglePlayer && player2.isDead() && currLevel == Difficulty.Hard) {
-            if (!gameOver) {
-                gameOver = true;
-            }
-            vic.drawVictory(gl,0f, 0.5f, 0.5f);
-        }
-
-
         if (gameMode == GameMode.SinglePlayer) {
+            if (player2.isDead() && currLevel == Difficulty.Hard) {
+                if (!gameOver) {
+                    gameOver = true;
+                    GameStats.endSinglePlayer();
+                }
+                vic.drawVictory(gl, 0f, 0.5f, 0.5f);
+                //drawFinalStats(gl);
+            }
             handlePlayer1Input();
             if (ai != null) {
                 ai.update();
             }
-            if(player2.isDead()){
+            if (player2.isDead()) {
                 spawnNextBot(gl);
             }
-        } else {
-            handlePlayer1Input();
-            handlePlayer2Input();
+        }
+
+        else {
+            if (!roundOver && !GameStats.isMatchOver()) {
+                handlePlayer1Input();
+                handlePlayer2Input();
+
+                if (player1.isDead()) {
+                    endRound(2);
+                } else if (player2.isDead()) {
+                    endRound(1);
+                }
+            } else if (roundOver && !GameStats.isMatchOver()) {
+                long now = System.currentTimeMillis();
+                if (now - roundEndTime > roundTransitionDelay) {
+                    startNextRound(gl);
+                }
+            }
+            else{
+                vic.drawVictory(gl, 0f, 0.5f, 0.5f);
+            }
         }
 
         player1.update();
@@ -166,8 +189,8 @@ public class GameGLEventListener extends AnimListener {
             player2.draw(gl, maxWidth, maxHeight);
         }
 
-        drawBars(gl, player1, maxWidth, maxHeight, true);
-        drawBars(gl, player2, maxWidth, maxHeight, false);
+//        drawBars(gl, player1, maxWidth, maxHeight, true);
+//        drawBars(gl, player2, maxWidth, maxHeight, false);
 
     }
 
@@ -301,87 +324,87 @@ public class GameGLEventListener extends AnimListener {
     }
 
 
-    private void drawBars(GL gl, Knight k, int maxWidth, int maxHeight, boolean isPlayer) {
-        float healthPer = Math.max(0, k.hp) / 100f;
-        float shieldPer = k.getShieldPercent();
-
-        float xPos = isPlayer ? -0.95f : 0.55f;
-        float yPos = 0.9f;
-        float barWidth = 0.35f;
-        float barHeight = 0.04f;
-
-        gl.glDisable(GL.GL_TEXTURE_2D);
-
-        String label = isPlayer ? "P1" : (gameMode == GameMode.SinglePlayer ? "AI" : "P2");
-
-        gl.glColor3f(0.2f, 0.2f, 0.2f);
-        gl.glBegin(GL.GL_QUADS);
-        gl.glVertex2f(xPos, yPos - barHeight);
-        gl.glVertex2f(xPos + barWidth, yPos - barHeight);
-        gl.glVertex2f(xPos + barWidth, yPos);
-        gl.glVertex2f(xPos, yPos);
-        gl.glEnd();
-
-        if (healthPer > 0.6f) {
-            gl.glColor3f(0, 1, 0);
-        } else if (healthPer > 0.3f) {
-            gl.glColor3f(1, 1, 0);
-        } else {
-            gl.glColor3f(1, 0, 0);
-        }
-
-        gl.glBegin(GL.GL_QUADS);
-        gl.glVertex2f(xPos, yPos - barHeight);
-        gl.glVertex2f(xPos + barWidth * healthPer, yPos - barHeight);
-        gl.glVertex2f(xPos + barWidth * healthPer, yPos);
-        gl.glVertex2f(xPos, yPos);
-        gl.glEnd();
-
-        gl.glColor3f(1, 1, 1);
-        gl.glLineWidth(2.0f);
-        gl.glBegin(GL.GL_LINE_LOOP);
-        gl.glVertex2f(xPos, yPos - barHeight);
-        gl.glVertex2f(xPos + barWidth, yPos - barHeight);
-        gl.glVertex2f(xPos + barWidth, yPos);
-        gl.glVertex2f(xPos, yPos);
-        gl.glEnd();
-
-        float shieldYPos = yPos - barHeight - 0.05f;
-
-        gl.glColor3f(0.1f, 0.1f, 0.2f);
-        gl.glBegin(GL.GL_QUADS);
-        gl.glVertex2f(xPos, shieldYPos - barHeight * 0.7f);
-        gl.glVertex2f(xPos + barWidth, shieldYPos - barHeight * 0.7f);
-        gl.glVertex2f(xPos + barWidth, shieldYPos);
-        gl.glVertex2f(xPos, shieldYPos);
-        gl.glEnd();
-
-        if (k.isDefending()) {
-            float pulse = 0.5f + 0.5f * (float) Math.sin(System.currentTimeMillis() * 0.01);
-            gl.glColor3f(0, 0.5f + pulse * 0.5f, 1);
-        } else {
-            gl.glColor3f(0, 0.5f, 1);
-        }
-
-        gl.glBegin(GL.GL_QUADS);
-        gl.glVertex2f(xPos, shieldYPos - barHeight * 0.7f);
-        gl.glVertex2f(xPos + barWidth * shieldPer, shieldYPos - barHeight * 0.7f);
-        gl.glVertex2f(xPos + barWidth * shieldPer, shieldYPos);
-        gl.glVertex2f(xPos, shieldYPos);
-        gl.glEnd();
-
-        gl.glColor3f(0.5f, 0.7f, 1);
-        gl.glLineWidth(1.5f);
-        gl.glBegin(GL.GL_LINE_LOOP);
-        gl.glVertex2f(xPos, shieldYPos - barHeight * 0.7f);
-        gl.glVertex2f(xPos + barWidth, shieldYPos - barHeight * 0.7f);
-        gl.glVertex2f(xPos + barWidth, shieldYPos);
-        gl.glVertex2f(xPos, shieldYPos);
-        gl.glEnd();
-        gl.glLineWidth(1.0f);
-
-        gl.glEnable(GL.GL_TEXTURE_2D);
-    }
+//    private void drawBars(GL gl, Knight k, int maxWidth, int maxHeight, boolean isPlayer) {
+//        float healthPer = Math.max(0, k.hp) / 100f;
+//        float shieldPer = k.getShieldPercent();
+//
+//        float xPos = isPlayer ? -0.95f : 0.55f;
+//        float yPos = 0.9f;
+//        float barWidth = 0.35f;
+//        float barHeight = 0.04f;
+//
+//        gl.glDisable(GL.GL_TEXTURE_2D);
+//
+//        String label = isPlayer ? "P1" : (gameMode == GameMode.SinglePlayer ? "AI" : "P2");
+//
+//        gl.glColor3f(0.2f, 0.2f, 0.2f);
+//        gl.glBegin(GL.GL_QUADS);
+//        gl.glVertex2f(xPos, yPos - barHeight);
+//        gl.glVertex2f(xPos + barWidth, yPos - barHeight);
+//        gl.glVertex2f(xPos + barWidth, yPos);
+//        gl.glVertex2f(xPos, yPos);
+//        gl.glEnd();
+//
+//        if (healthPer > 0.6f) {
+//            gl.glColor3f(0, 1, 0);
+//        } else if (healthPer > 0.3f) {
+//            gl.glColor3f(1, 1, 0);
+//        } else {
+//            gl.glColor3f(1, 0, 0);
+//        }
+//
+//        gl.glBegin(GL.GL_QUADS);
+//        gl.glVertex2f(xPos, yPos - barHeight);
+//        gl.glVertex2f(xPos + barWidth * healthPer, yPos - barHeight);
+//        gl.glVertex2f(xPos + barWidth * healthPer, yPos);
+//        gl.glVertex2f(xPos, yPos);
+//        gl.glEnd();
+//
+//        gl.glColor3f(1, 1, 1);
+//        gl.glLineWidth(2.0f);
+//        gl.glBegin(GL.GL_LINE_LOOP);
+//        gl.glVertex2f(xPos, yPos - barHeight);
+//        gl.glVertex2f(xPos + barWidth, yPos - barHeight);
+//        gl.glVertex2f(xPos + barWidth, yPos);
+//        gl.glVertex2f(xPos, yPos);
+//        gl.glEnd();
+//
+//        float shieldYPos = yPos - barHeight - 0.05f;
+//
+//        gl.glColor3f(0.1f, 0.1f, 0.2f);
+//        gl.glBegin(GL.GL_QUADS);
+//        gl.glVertex2f(xPos, shieldYPos - barHeight * 0.7f);
+//        gl.glVertex2f(xPos + barWidth, shieldYPos - barHeight * 0.7f);
+//        gl.glVertex2f(xPos + barWidth, shieldYPos);
+//        gl.glVertex2f(xPos, shieldYPos);
+//        gl.glEnd();
+//
+//        if (k.isDefending()) {
+//            float pulse = 0.5f + 0.5f * (float) Math.sin(System.currentTimeMillis() * 0.01);
+//            gl.glColor3f(0, 0.5f + pulse * 0.5f, 1);
+//        } else {
+//            gl.glColor3f(0, 0.5f, 1);
+//        }
+//
+//        gl.glBegin(GL.GL_QUADS);
+//        gl.glVertex2f(xPos, shieldYPos - barHeight * 0.7f);
+//        gl.glVertex2f(xPos + barWidth * shieldPer, shieldYPos - barHeight * 0.7f);
+//        gl.glVertex2f(xPos + barWidth * shieldPer, shieldYPos);
+//        gl.glVertex2f(xPos, shieldYPos);
+//        gl.glEnd();
+//
+//        gl.glColor3f(0.5f, 0.7f, 1);
+//        gl.glLineWidth(1.5f);
+//        gl.glBegin(GL.GL_LINE_LOOP);
+//        gl.glVertex2f(xPos, shieldYPos - barHeight * 0.7f);
+//        gl.glVertex2f(xPos + barWidth, shieldYPos - barHeight * 0.7f);
+//        gl.glVertex2f(xPos + barWidth, shieldYPos);
+//        gl.glVertex2f(xPos, shieldYPos);
+//        gl.glEnd();
+//        gl.glLineWidth(1.0f);
+//
+//        gl.glEnable(GL.GL_TEXTURE_2D);
+//    }
 
 
     public static Difficulty getDiff(){
@@ -413,5 +436,43 @@ public class GameGLEventListener extends AnimListener {
         loadAllAnimations(gl, player2, currLevel.path);
 
         ai = new AIController(player2, player1, currLevel);
+    }
+
+    private void endRound(int winner) {
+        if (roundOver) return;
+
+        roundOver = true;
+        roundEndTime = System.currentTimeMillis();
+
+        if (winner == 1) {
+            GameStats.player1WinsRound();
+            roundWinnerText = "PLAYER 1 WINS ROUND " + (GameStats.getCurrentRound() - 1);
+        } else {
+            GameStats.player2WinsRound();
+            roundWinnerText = "PLAYER 2 WINS ROUND " + (GameStats.getCurrentRound() - 1);
+        }
+    }
+    private void startNextRound(GL gl) {
+        roundOver = false;
+
+        player1.hp = 100;
+        player1.maxHp = 100;
+        player1.stamina = player1.maxStamina;
+        player1.shieldHealth = 100;
+        player1.x = 50;
+        player1.y = 25;
+        player1.facingRight = true;
+        player1.currState = AnimationState.Idle;
+        player1.isHurting = false;
+
+        player2.hp = 100;
+        player2.maxHp = 100;
+        player2.stamina = player2.maxStamina;
+        player2.shieldHealth = 100;
+        player2.x = 150;
+        player2.y = 25;
+        player2.facingRight = false;
+        player2.currState = AnimationState.Idle;
+        player2.isHurting = false;
     }
 }

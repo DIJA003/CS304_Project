@@ -19,11 +19,22 @@ public class AIController {
     boolean shouldDef = false;
     long defDur = 0;
 
+
+    private AIMode mode;
+    private int aggLevel = 50;
+    private long lastDdg = 0;
+    private long ddgCD = 3000;
+
+    private int playerAtckCnt = 0;
+    private long lastPlayerAtck = 0;
+    private boolean isPlayerAgg = false;
+
     public AIController(Knight ai, Knight player, Difficulty diff) {
         this.ai = ai;
         this.player = player;
         this.diff = diff;
         applayDifficulty();
+        setMode();
     }
 
     private void applayDifficulty(){
@@ -75,6 +86,8 @@ public class AIController {
         int distance = Math.abs(diff);
         ai.facingRight = (diff > 0);
 
+        adaptBehav(now, distance);
+
         handleDefensiveBehavior(now, distance);
 
         if (ai.isDefending())
@@ -94,71 +107,190 @@ public class AIController {
             return;
         }
 
-        if (random.nextInt(100) < 5) {
-            if (random.nextBoolean() && ai.x > 5) {
-                ai.x -= moveSpd;
-            } else if (ai.x < 195) {
+        if (mode == AIMode.Aggressive && distance > attackRange + 10) {
+            if (diff > 0 && ai.x < 195 && ai.stamina > 20) {
                 ai.x += moveSpd;
+                ai.setState(AnimationState.Run);
+            } else if (diff < 0 && ai.x > 5 && ai.stamina > 20) {
+                ai.x -= moveSpd;
+                ai.setState(AnimationState.Run);
             }
-            ai.setState(AnimationState.Run);
-            return;
+        } else if (mode == AIMode.Passive) {
+            if (random.nextInt(100) < 30) {
+                if (distance < 60 && ai.x > 5 && diff > 0) {
+                    ai.x -= moveSpd;
+                    ai.setState(AnimationState.Run);
+                } else if (distance < 60 && ai.x < 195 && diff < 0) {
+                    ai.x += moveSpd;
+                    ai.setState(AnimationState.Run);
+                }
+            } else {
+                normalMove(diff);
+            }
+        } else {
+            if (random.nextInt(100) < 5) {
+                if (random.nextBoolean() && ai.x > 5) {
+                    ai.x -= moveSpd;
+                } else if (ai.x < 195) {
+                    ai.x += moveSpd;
+                }
+                ai.setState(AnimationState.Run);
+                return;
+            }
+            normalMove(diff);
         }
 
-        if (diff > 0 && ai.x < 195) {
-            ai.x += moveSpd;
-            ai.setState(AnimationState.Run);
-        } else if (diff < 0 && ai.x > 5) {
-            ai.x -= moveSpd;
-            ai.setState(AnimationState.Run);
-        } else {
-            ai.setState(AnimationState.Idle);
-        }
         if (ai.canMove() &&
                 ai.currState != AnimationState.Run &&
                 !ai.isAttackState(ai.currState)) {
             ai.setState(AnimationState.Idle);
         }
     }
+
+    private void normalMove(int diff) {
+        if (diff > 0 && ai.x < 195 && ai.stamina > 10) {
+            ai.x += moveSpd;
+            ai.setState(AnimationState.Run);
+        } else if (diff < 0 && ai.x > 5 && ai.stamina > 10) {
+            ai.x -= moveSpd;
+            ai.setState(AnimationState.Run);
+        } else {
+            ai.setState(AnimationState.Idle);
+        }
+    }
+
+    private void adaptBehav(long now, int distance) {
+        float hpRatio = ai.hp / (float) ai.maxHp;
+
+        if(hpRatio < 0.3f){
+            aggLevel = Math.max(20,aggLevel - 30);
+        }else if(hpRatio > 0.7f && player.hp < ai.hp){
+            aggLevel = Math.min(90, aggLevel + 20);
+        }
+        if (player.stamina < 30 && distance < 80) {
+            aggLevel = Math.min(100, aggLevel + 30);
+        }
+    }
+
     private void performAttack() {
         int choice = random.nextInt(100);
+        float hpRatio = ai.hp / (float) ai.maxHp;
+        float staminaRatio = ai.stamina / ai.maxStamina;
+        //float hpRatio = ai.hp / 100f;
 
-        float hpRatio = ai.hp / 100f;
-
-        if (hpRatio > 0.5f) {
-            if (choice < 40) {
-                ai.attack1(player);
-            } else if (choice < 70) {
-                ai.attack2(player);
-            } else {
-                ai.attack3(player);
-            }
-        } else {
-            if (choice < 60) {
-                ai.attack1(player);
-            } else if (choice < 85) {
-                ai.attack2(player);
-            } else {
-                ai.attack3(player);
-            }
+        switch(diff) {
+            case Easy:
+                if (choice < 50) {
+                    ai.attack1(player);
+                } else if (choice < 80) {
+                    ai.attack2(player);
+                } else {
+                    ai.attack3(player);
+                }
+                break;
+            case Medium:
+                if (hpRatio > 0.5f) {
+                    if (choice < 35) {
+                        ai.attack1(player);
+                    } else if (choice < 70) {
+                        ai.attack2(player);
+                    } else if (staminaRatio > 0.4f) {
+                        ai.attack3(player);
+                    } else {
+                        ai.attack1(player);
+                    }
+                } else {
+                    if (choice < 50) {
+                        ai.attack1(player);
+                    } else if (choice < 80 && staminaRatio > 0.3f) {
+                        ai.attack2(player);
+                    } else if (staminaRatio > 0.5f) {
+                        ai.attack3(player);
+                    } else {
+                        ai.attack1(player);
+                    }
+                }
+                break;
+            case Hard:
+                if (isPlayerAgg) {
+                    if (choice < 40) {
+                        ai.attack3(player);
+                    } else if (choice < 75) {
+                        ai.attack2(player);
+                    } else {
+                        ai.attack1(player);
+                    }
+                } else if (player.stamina < 30) {
+                    if (choice < 50 && staminaRatio > 0.5f) {
+                        ai.attack3(player);
+                    } else if (choice < 80) {
+                        ai.attack2(player);
+                    } else {
+                        ai.attack1(player);
+                    }
+                } else {
+                    if (choice < 30) {
+                        ai.attack1(player);
+                    } else if (choice < 65 && staminaRatio > 0.3f) {
+                        ai.attack2(player);
+                    } else if (staminaRatio > 0.5f) {
+                        ai.attack3(player);
+                    } else {
+                        ai.attack1(player);
+                    }
+                }
+                break;
         }
     }
 
     private void handleDefensiveBehavior(long now, int distance) {
         boolean playerIsAttacking = player.isAttackState(player.currState);
-        if (playerIsAttacking && distance < 50 && ai.getShieldHealth() > 20) {
+        int defenseChance = 60;
+
+        switch(diff) {
+            case Easy:
+                defenseChance = 40;
+                break;
+            case Medium:
+                defenseChance = 65;
+                break;
+            case Hard:
+                defenseChance = 85;
+                if (player.stamina > 60) defenseChance = 90;
+                break;
+        }
+
+        if (playerIsAttacking && distance < 50 && ai.getShieldHealth() > 20 && ai.stamina > 25) {
             if (now - lastDef > defCD) {
-                if (random.nextInt(100) < 60) {
+                if (random.nextInt(100) < defenseChance) {
                     ai.startDefending();
                     shouldDef = true;
-                    defDur = now + 800;
+
+                    long defDuration = diff == Difficulty.Hard ? 1000 :
+                            diff == Difficulty.Medium ? 800 : 600;
+                    defDur = now + defDuration;
+                    lastDef = now;
                     lastTry = now;
                 }
             }
         }
-
         if (shouldDef && now > defDur) {
             ai.stopDefending();
             shouldDef = false;
+        }
+    }
+
+    private void setMode() {
+        switch(diff) {
+            case Easy:
+                mode = AIMode.Passive;
+                break;
+            case Medium:
+                mode = AIMode.Balanced;
+                break;
+            case Hard:
+                mode = AIMode.Aggressive;
+                break;
         }
     }
 }
