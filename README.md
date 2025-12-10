@@ -17,7 +17,7 @@ now to singlePlayer:
   each win also will give really thrilling backGround sounds so volume up
 
 last Multiplayer:
-  each players have to win at least 2 consecutive round to win unfortunately i still haven't added the character choosing :'(
+  each player have to win at least 2 consecutive round to win unfortunately i still haven't added the character choosing :'(
   but music will make u wanna win so bad XD
 
   Enjoy,
