@@ -41,11 +41,11 @@ public class GameGLEventListener extends AnimListener {
     private final long roundTransitionDelay = 3000;
     private String roundWinnerText = "";
 
-    String[] roundSong = new String[]{"src//assets//sounds//Round2.wav","src//assets//sounds//Round3.wav"};
+    String[] roundSong = new String[]{"src//assets//sounds//Round2.wav", "src//assets//sounds//Round3.wav"};
     int k = 0;
 
 
-    String player1Name = "Player 1",player2Name = "Player 2";
+    String player1Name = "Player 1", player2Name = "Player 2";
 
     BitSet keyBits = new BitSet(256);
 
@@ -80,10 +80,9 @@ public class GameGLEventListener extends AnimListener {
         if (gameMode == GameMode.SinglePlayer) {
             GameStats.startSinglePLayer();
             currLevel = Difficulty.Easy;
-            ai = new AIController(player2, player1,currLevel);
+            ai = new AIController(player2, player1, currLevel);
             loadAllAnimations(gl, player2, currLevel.path);
-        }
-        else{
+        } else {
             loadAllAnimations(gl, player2, "src//assets//knight2");
         }
 
@@ -103,7 +102,7 @@ public class GameGLEventListener extends AnimListener {
 
         loadBarTexture(gl, "src//assets//ui//PlayerBars.png");
 
-        vic.load(gl,"src//assets//ui//winfinal.png");
+        vic.load(gl, "src//assets//ui//winfinal.png");
     }
 
     private void loadBarTexture(GL gl, String path) {
@@ -128,6 +127,7 @@ public class GameGLEventListener extends AnimListener {
             e.printStackTrace();
         }
     }
+
     private void loadAllAnimations(GL gl, Knight k, String basePath) {
         loadAnimation(gl, k, AnimationState.Idle, basePath + "//idle");
         loadAnimation(gl, k, AnimationState.Run, basePath + "//run");
@@ -209,9 +209,7 @@ public class GameGLEventListener extends AnimListener {
             if (player2.isDead()) {
                 spawnNextBot(gl);
             }
-        }
-
-        else {
+        } else {
             if (!roundOver && !GameStats.isMatchOver()) {
                 handlePlayer1Input();
                 handlePlayer2Input();
@@ -227,9 +225,9 @@ public class GameGLEventListener extends AnimListener {
                 if (now - roundEndTime > roundTransitionDelay) {
                     startNextRound(gl);
                 }
-            }
-            else{
-                vic.drawVictory(gl, 0f, 0.5f, 0.5f);
+            } else {
+                //String winner = (GameStats.getWinner() == 1 ? player1Name : player2Name) + "WINS!";
+                announceWinner(gl);
             }
         }
 
@@ -246,7 +244,7 @@ public class GameGLEventListener extends AnimListener {
         }
 
         drawBars(gl, player1, maxWidth, maxHeight, true);
-        if(gameMode == GameMode.MultiPlayer){
+        if (gameMode == GameMode.MultiPlayer) {
             drawBars(gl, player2, maxWidth, maxHeight, false);
         }
 
@@ -350,11 +348,12 @@ public class GameGLEventListener extends AnimListener {
         }
     }
 
-    public void backToMenu(){
-        if(isKeyPressed(KeyEvent.VK_ESCAPE)){
+    public void backToMenu() {
+        if (isKeyPressed(KeyEvent.VK_ESCAPE)) {
             parent.returnToMenu();
         }
     }
+
     @Override
     public void keyPressed(KeyEvent e) {
         keyBits.set(e.getKeyCode());
@@ -419,8 +418,8 @@ public class GameGLEventListener extends AnimListener {
         float barHeight = 0.015f;
 
         float greenBarY = yPos - 0.012f;
-        float redBarY   = yPos - 0.055f;
-        float blueBarY  = yPos - 0.092f;
+        float redBarY = yPos - 0.055f;
+        float blueBarY = yPos - 0.092f;
 
 
         drawColoredBar(gl, barStartX, greenBarY, barWidth, barHeight, staminaPer,
@@ -435,14 +434,16 @@ public class GameGLEventListener extends AnimListener {
         drawText(gl, isPlayer ? player1Name : player2Name, xPos + 0.2f, yPos - 0.2f);
         gl.glPopAttrib();
     }
+
     private void drawText(GL gl, String text, float x, float y) {
         GLUT glut = new GLUT();
         gl.glColor3f(1f, 1f, 1f);
         gl.glRasterPos2f(x, y);
         for (char c : text.toCharArray()) {
-            glut.glutBitmapCharacter(GLUT.BITMAP_HELVETICA_18, c);
+            glut.glutBitmapCharacter(GLUT.BITMAP_TIMES_ROMAN_24, c);
         }
     }
+
     private void drawColoredBar(GL gl, float x, float y, float width, float height,
                                 float percentage, float r, float g, float b) {
         gl.glColor4f(r, g, b, 0.9f);
@@ -453,9 +454,11 @@ public class GameGLEventListener extends AnimListener {
         gl.glVertex2f(x, y);
         gl.glEnd();
     }
-    public static Difficulty getDiff(){
+
+    public static Difficulty getDiff() {
         return currLevel;
     }
+
     private void spawnNextBot(GL gl) {
         if (currLevel == Difficulty.Easy) {
             currLevel = Difficulty.Medium;
@@ -498,8 +501,9 @@ public class GameGLEventListener extends AnimListener {
             roundWinnerText = "PLAYER 2 WINS ROUND " + (GameStats.getCurrentRound() - 1);
         }
     }
+
     private void startNextRound(GL gl) {
-        if(k > roundSong.length) k = k % roundSong.length;
+        if (k > roundSong.length) k = k % roundSong.length;
         SoundManager.stopMusic();
         SoundManager.playMusic(roundSong[k++]);
 
@@ -525,4 +529,31 @@ public class GameGLEventListener extends AnimListener {
         player2.currState = AnimationState.Idle;
         player2.isHurting = false;
     }
+
+    private void announceWinner(GL gl) {
+        String winner;
+        if (GameStats.getWinner() == 1)
+            winner = player1Name + " WINS!";
+        else
+            winner = player2Name + " WINS!";
+
+        GLUT glut = new GLUT();
+
+        gl.glPushMatrix();
+
+        gl.glTranslatef(-0.6f, 0.0f, 0);
+
+        gl.glScalef(0.0010f, 0.0010f, 1);
+
+        gl.glLineWidth(10f);
+
+        gl.glColor3f(1f, 1f, 0f);
+
+        for (char c : winner.toCharArray()) {
+            glut.glutStrokeCharacter(GLUT.STROKE_ROMAN, c);
+        }
+
+        gl.glPopMatrix();
+    }
+
 }

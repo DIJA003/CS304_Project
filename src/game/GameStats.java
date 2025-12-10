@@ -76,40 +76,6 @@ public class GameStats {
         return 0;
     }
 
-    public static void recordDamage(int damage) {
-        totalDmg += damage;
-    }
-
-    public static void recordAttack() {
-        atckLand++;
-    }
-
-    public static void recordPerfectBlock() {
-        perfectBlock++;
-    }
-
-    public static void resetStats() {
-        totalDmg = 0;
-        atckLand = 0;
-        perfectBlock = 0;
-    }
-
-    public static int getTotalDamageDealt() {
-        return totalDmg;
-    }
-
-    public static int getTotalAttacksLanded() {
-        return atckLand;
-    }
-
-    public static int getPerfectBlocks() {
-        return perfectBlock;
-    }
-
-    public static int getRoundsToWin() {
-        return roundsToWin;
-    }
-
     public static boolean isMatchOver() {
         return player1Round >= roundsToWin || player2Round >= roundsToWin;
     }
